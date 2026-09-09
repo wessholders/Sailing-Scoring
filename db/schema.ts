@@ -1,4 +1,14 @@
 export const schemaStatements = [
+  `CREATE TABLE IF NOT EXISTS organizations (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    short_name TEXT NOT NULL,
+    slug TEXT NOT NULL UNIQUE,
+    type TEXT NOT NULL CHECK (type IN ('UNIVERSITY', 'YACHT_CLUB', 'ASSOCIATION')),
+    primary_team_id TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  )`,
   `CREATE TABLE IF NOT EXISTS users (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
@@ -37,6 +47,7 @@ export const schemaStatements = [
   )`,
   `CREATE TABLE IF NOT EXISTS teams (
     id TEXT PRIMARY KEY,
+    organization_id TEXT,
     name TEXT NOT NULL,
     short_name TEXT NOT NULL,
     slug TEXT NOT NULL UNIQUE,
@@ -45,19 +56,72 @@ export const schemaStatements = [
     active INTEGER NOT NULL DEFAULT 1,
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL,
+    FOREIGN KEY (organization_id) REFERENCES organizations(id),
     FOREIGN KEY (conference_id) REFERENCES conferences(id)
+  )`,
+  `CREATE TABLE IF NOT EXISTS organization_user_roles (
+    id TEXT PRIMARY KEY,
+    organization_id TEXT NOT NULL,
+    user_id TEXT NOT NULL,
+    role TEXT NOT NULL CHECK (role = 'ORGANIZATION_ADMIN'),
+    FOREIGN KEY (organization_id) REFERENCES organizations(id),
+    FOREIGN KEY (user_id) REFERENCES users(id)
   )`,
   `CREATE TABLE IF NOT EXISTS team_memberships (
     id TEXT PRIMARY KEY,
     team_id TEXT NOT NULL,
     sailor_id TEXT NOT NULL,
+    invited_by_user_id TEXT,
+    source_invitation_id TEXT,
     start_season_id TEXT NOT NULL,
     end_season_id TEXT,
     active INTEGER NOT NULL DEFAULT 1,
     FOREIGN KEY (team_id) REFERENCES teams(id),
     FOREIGN KEY (sailor_id) REFERENCES sailors(id),
+    FOREIGN KEY (invited_by_user_id) REFERENCES users(id),
     FOREIGN KEY (start_season_id) REFERENCES seasons(id),
     FOREIGN KEY (end_season_id) REFERENCES seasons(id)
+  )`,
+  `CREATE TABLE IF NOT EXISTS team_invitations (
+    id TEXT PRIMARY KEY,
+    team_id TEXT NOT NULL,
+    email TEXT NOT NULL,
+    intended_role TEXT NOT NULL CHECK (intended_role IN ('SAILOR', 'TEAM_MANAGER', 'TEAM_ADMIN')),
+    sailor_id TEXT,
+    invited_by_user_id TEXT NOT NULL,
+    token_hash TEXT NOT NULL UNIQUE,
+    status TEXT NOT NULL CHECK (status IN ('PENDING', 'ACCEPTED', 'EXPIRED', 'REVOKED')),
+    expires_at TEXT NOT NULL,
+    accepted_at TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    FOREIGN KEY (team_id) REFERENCES teams(id),
+    FOREIGN KEY (sailor_id) REFERENCES sailors(id),
+    FOREIGN KEY (invited_by_user_id) REFERENCES users(id)
+  )`,
+  `CREATE TABLE IF NOT EXISTS sailor_account_links (
+    id TEXT PRIMARY KEY,
+    sailor_id TEXT NOT NULL,
+    user_id TEXT NOT NULL,
+    source_invitation_id TEXT,
+    verified_at TEXT NOT NULL,
+    FOREIGN KEY (sailor_id) REFERENCES sailors(id),
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (source_invitation_id) REFERENCES team_invitations(id)
+  )`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS idx_sailor_account_links_sailor_user
+    ON sailor_account_links(sailor_id, user_id)`,
+  `CREATE TABLE IF NOT EXISTS team_boats (
+    id TEXT PRIMARY KEY,
+    team_id TEXT NOT NULL,
+    boat_class TEXT NOT NULL,
+    hull_number TEXT,
+    hull_name TEXT,
+    sail_number TEXT NOT NULL,
+    active INTEGER NOT NULL DEFAULT 1,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    FOREIGN KEY (team_id) REFERENCES teams(id)
   )`,
   `CREATE TABLE IF NOT EXISTS scoring_profiles (
     id TEXT PRIMARY KEY,
@@ -175,6 +239,10 @@ export const schemaStatements = [
     ON events(status, start_date)`,
   `CREATE INDEX IF NOT EXISTS idx_team_memberships_team_active
     ON team_memberships(team_id, active)`,
+  `CREATE INDEX IF NOT EXISTS idx_team_invitations_team_status
+    ON team_invitations(team_id, status)`,
+  `CREATE INDEX IF NOT EXISTS idx_team_boats_team_active
+    ON team_boats(team_id, active)`,
   `CREATE INDEX IF NOT EXISTS idx_sailing_assignments_entry_division
     ON sailing_assignments(event_entry_id, division_id)`,
 ];

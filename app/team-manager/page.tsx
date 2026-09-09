@@ -7,10 +7,10 @@ import {
   getEventEntries,
   getRosterForTeam,
   getSailorById,
+  getTeamBoats,
+  getTeamInvitations,
   getTeamBySlug,
 } from '@/lib/seed-data';
-
-export const dynamic = 'force-dynamic';
 
 export default async function TeamManagerPage() {
   const user = await getCurrentUser();
@@ -23,6 +23,8 @@ export default async function TeamManagerPage() {
   }
 
   const roster = getRosterForTeam(team.id);
+  const invitations = getTeamInvitations(team.id);
+  const boats = getTeamBoats(team.id);
   const entry = getEventEntries(event.id).find((candidate) => candidate.teamId === team.id);
   const divisions = getEventDivisions(event.id);
   const assignments = entry ? getAssignmentsForEntry(entry.id) : [];
@@ -47,48 +49,85 @@ export default async function TeamManagerPage() {
             This route checks team-manager permissions server-side. The demo user is allowed locally.
           </div>
         )}
-        <section className="rounded-lg border border-[#d7ded2] bg-white">
-          <div className="border-b border-[#d7ded2] px-5 py-4">
-            <h2 className="text-xl font-semibold">Roster</h2>
-            <p className="text-sm text-[#66756d]">Membership records are historical and season-aware.</p>
-          </div>
-          <div className="divide-y divide-[#edf0ea]">
-            {roster.map((sailor) => (
-              <div className="grid gap-3 px-5 py-4 text-sm sm:grid-cols-[1fr_120px_120px]" key={sailor.id}>
-                <Link className="font-semibold hover:underline" href={`/sailors/${sailor.slug}`}>
-                  {sailor.firstName} {sailor.lastName}
-                </Link>
-                <span>Class of {sailor.graduationYear}</span>
-                <span className="rounded-md bg-[#eef2eb] px-2 py-1 text-center text-xs font-semibold text-[#405850]">
-                  Active
-                </span>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <aside className="rounded-lg border border-[#d7ded2] bg-white p-5">
-          <h2 className="text-xl font-semibold">Fall Fury Lineups</h2>
-          <div className="mt-4 space-y-5">
-            {divisions.map((division) => (
-              <div key={division.id}>
-                <p className="font-semibold">{division.name}</p>
-                <div className="mt-2 space-y-2 text-sm text-[#52645e]">
-                  {assignments
-                    .filter((assignment) => assignment.divisionId === division.id)
-                    .map((assignment) => {
-                      const sailor = getSailorById(assignment.sailorId);
-                      return (
-                        <p key={assignment.id}>
-                          R{assignment.startRaceNumber}-{assignment.endRaceNumber ?? 'end'} {assignment.role}:{' '}
-                          {sailor?.firstName} {sailor?.lastName}
-                        </p>
-                      );
-                    })}
+        <div className="space-y-6">
+          <section className="rounded-lg border border-[#d7ded2] bg-white">
+            <div className="border-b border-[#d7ded2] px-5 py-4">
+              <h2 className="text-xl font-semibold">Roster</h2>
+              <p className="text-sm text-[#66756d]">Membership records are historical and season-aware.</p>
+            </div>
+            <div className="divide-y divide-[#edf0ea]">
+              {roster.map((sailor) => (
+                <div className="grid gap-3 px-5 py-4 text-sm sm:grid-cols-[1fr_120px_120px]" key={sailor.id}>
+                  <Link className="font-semibold hover:underline" href={`/sailors/${sailor.slug}`}>
+                    {sailor.firstName} {sailor.lastName}
+                  </Link>
+                  <span>Class of {sailor.graduationYear}</span>
+                  <span className="rounded-md bg-[#eef2eb] px-2 py-1 text-center text-xs font-semibold text-[#405850]">
+                    Active
+                  </span>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          </section>
+
+          <section className="rounded-lg border border-[#d7ded2] bg-white">
+            <div className="border-b border-[#d7ded2] px-5 py-4">
+              <h2 className="text-xl font-semibold">Invite Queue</h2>
+              <p className="text-sm text-[#66756d]">
+                Team admins invite sailors or managers by email; invite links bind account setup to the team.
+              </p>
+            </div>
+            <div className="divide-y divide-[#edf0ea]">
+              {invitations.map((invite) => (
+                <div className="grid gap-2 px-5 py-4 text-sm sm:grid-cols-[1fr_130px_110px]" key={invite.id}>
+                  <span className="font-semibold">{invite.email}</span>
+                  <span>{invite.intendedRole}</span>
+                  <span className="rounded-md bg-[#fff4df] px-2 py-1 text-center text-xs font-semibold text-[#7a4b12]">
+                    {invite.status}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </section>
+        </div>
+
+        <aside className="space-y-6">
+          <section className="rounded-lg border border-[#d7ded2] bg-white p-5">
+            <h2 className="text-xl font-semibold">Fall Fury Lineups</h2>
+            <div className="mt-4 space-y-5">
+              {divisions.map((division) => (
+                <div key={division.id}>
+                  <p className="font-semibold">{division.name}</p>
+                  <div className="mt-2 space-y-2 text-sm text-[#52645e]">
+                    {assignments
+                      .filter((assignment) => assignment.divisionId === division.id)
+                      .map((assignment) => {
+                        const sailor = getSailorById(assignment.sailorId);
+                        return (
+                          <p key={assignment.id}>
+                            R{assignment.startRaceNumber}-{assignment.endRaceNumber ?? 'end'} {assignment.role}:{' '}
+                            {sailor?.firstName} {sailor?.lastName}
+                          </p>
+                        );
+                      })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section className="rounded-lg border border-[#d7ded2] bg-white p-5">
+            <h2 className="text-xl font-semibold">Fleet Assets</h2>
+            <p className="mt-1 text-sm text-[#66756d]">Future event assignments can draw from hulls, names, and sail numbers.</p>
+            <div className="mt-4 space-y-2">
+              {boats.map((boat) => (
+                <div className="rounded-md bg-[#f7f8f4] px-3 py-2 text-sm" key={boat.id}>
+                  <p className="font-semibold">{boat.hullName} - {boat.sailNumber}</p>
+                  <p className="text-[#66756d]">{boat.boatClass} / {boat.hullNumber}</p>
+                </div>
+              ))}
+            </div>
+          </section>
         </aside>
       </section>
     </main>

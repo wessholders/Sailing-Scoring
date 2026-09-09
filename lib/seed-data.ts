@@ -5,13 +5,18 @@ import type {
   Event,
   EventEntry,
   EventUserRole,
+  Organization,
+  OrganizationUserRole,
   Race,
   RaceResult,
   RaceResultStatusCode,
   Sailor,
+  SailorAccountLink,
   SailingAssignment,
   Season,
   Team,
+  TeamBoat,
+  TeamInvitation,
   TeamMembership,
   User,
   UserTeamRole,
@@ -46,18 +51,33 @@ export const conferences: Conference[] = [
   { id: 'conf-saisa', name: 'South Atlantic Intercollegiate Sailing Association', shortName: 'SAISA', slug: 'saisa' },
 ];
 
+export const organizations: Organization[] = [
+  organization('org-wisconsin', 'University of Wisconsin', 'Wisconsin', 'wisconsin', 'UNIVERSITY', 'team-wisconsin'),
+  organization('org-michigan', 'University of Michigan', 'Michigan', 'michigan', 'UNIVERSITY', 'team-michigan'),
+  organization('org-northwestern', 'Northwestern University', 'Northwestern', 'northwestern', 'UNIVERSITY', 'team-northwestern'),
+  organization('org-purdue', 'Purdue University', 'Purdue', 'purdue', 'UNIVERSITY', 'team-purdue'),
+  organization('org-notre-dame', 'University of Notre Dame', 'Notre Dame', 'notre-dame', 'UNIVERSITY', 'team-notre-dame'),
+  organization('org-marquette', 'Marquette University', 'Marquette', 'marquette', 'UNIVERSITY', 'team-marquette'),
+  organization('org-yale', 'Yale University', 'Yale', 'yale', 'UNIVERSITY', 'team-yale'),
+  organization('org-georgetown', 'Georgetown University', 'Georgetown', 'georgetown', 'UNIVERSITY', 'team-georgetown'),
+  organization('org-tulane', 'Tulane University', 'Tulane', 'tulane', 'UNIVERSITY', 'team-tulane'),
+  organization('org-charleston', 'College of Charleston', 'Charleston', 'charleston', 'UNIVERSITY', 'team-charleston'),
+  organization('org-tennessee', 'University of Tennessee', 'Tennessee', 'tennessee', 'UNIVERSITY', 'team-tennessee'),
+  organization('org-lakewood-yc', 'Lakewood Yacht Club', 'Lakewood YC', 'lakewood-yacht-club', 'YACHT_CLUB'),
+];
+
 export const teams: Team[] = [
-  team('team-wisconsin', 'University of Wisconsin', 'Wisconsin', 'wisconsin', 'conf-mcsa'),
-  team('team-michigan', 'University of Michigan', 'Michigan', 'michigan', 'conf-mcsa'),
-  team('team-northwestern', 'Northwestern University', 'Northwestern', 'northwestern', 'conf-mcsa'),
-  team('team-purdue', 'Purdue University', 'Purdue', 'purdue', 'conf-mcsa'),
-  team('team-notre-dame', 'University of Notre Dame', 'Notre Dame', 'notre-dame', 'conf-mcsa'),
-  team('team-marquette', 'Marquette University', 'Marquette', 'marquette', 'conf-mcsa'),
-  team('team-yale', 'Yale University', 'Yale', 'yale', 'conf-neisa'),
-  team('team-georgetown', 'Georgetown University', 'Georgetown', 'georgetown', 'conf-maisa'),
-  team('team-tulane', 'Tulane University', 'Tulane', 'tulane', 'conf-saisa'),
-  team('team-charleston', 'College of Charleston', 'Charleston', 'charleston', 'conf-saisa'),
-  team('team-tennessee', 'University of Tennessee', 'Tennessee', 'tennessee', 'conf-saisa'),
+  team('team-wisconsin', 'University of Wisconsin', 'Wisconsin', 'wisconsin', 'conf-mcsa', 'org-wisconsin'),
+  team('team-michigan', 'University of Michigan', 'Michigan', 'michigan', 'conf-mcsa', 'org-michigan'),
+  team('team-northwestern', 'Northwestern University', 'Northwestern', 'northwestern', 'conf-mcsa', 'org-northwestern'),
+  team('team-purdue', 'Purdue University', 'Purdue', 'purdue', 'conf-mcsa', 'org-purdue'),
+  team('team-notre-dame', 'University of Notre Dame', 'Notre Dame', 'notre-dame', 'conf-mcsa', 'org-notre-dame'),
+  team('team-marquette', 'Marquette University', 'Marquette', 'marquette', 'conf-mcsa', 'org-marquette'),
+  team('team-yale', 'Yale University', 'Yale', 'yale', 'conf-neisa', 'org-yale'),
+  team('team-georgetown', 'Georgetown University', 'Georgetown', 'georgetown', 'conf-maisa', 'org-georgetown'),
+  team('team-tulane', 'Tulane University', 'Tulane', 'tulane', 'conf-saisa', 'org-tulane'),
+  team('team-charleston', 'College of Charleston', 'Charleston', 'charleston', 'conf-saisa', 'org-charleston'),
+  team('team-tennessee', 'University of Tennessee', 'Tennessee', 'tennessee', 'conf-saisa', 'org-tennessee'),
 ];
 
 const sailorNamesByTeam: Record<string, Array<[string, string, number]>> = {
@@ -92,6 +112,7 @@ export const teamMemberships: TeamMembership[] = sailors.map((sailor) => ({
   id: `membership-${sailor.id}`,
   teamId: sailor.id.split('-sailor-')[0],
   sailorId: sailor.id,
+  invitedByUserId: 'user-manager-wisconsin',
   startSeasonId: 'season-fall-2026',
   active: true,
 }));
@@ -239,13 +260,66 @@ export const users: User[] = [
   },
 ];
 
+export const organizationUserRoles: OrganizationUserRole[] = [
+  {
+    id: 'our-wisconsin-admin',
+    organizationId: 'org-wisconsin',
+    userId: 'user-manager-wisconsin',
+    role: 'ORGANIZATION_ADMIN',
+  },
+];
+
 export const userTeamRoles: UserTeamRole[] = [
   {
     id: 'utr-wisconsin-manager',
     userId: 'user-manager-wisconsin',
     teamId: 'team-wisconsin',
-    role: 'TEAM_MANAGER',
+    role: 'TEAM_ADMIN',
   },
+];
+
+export const teamInvitations: TeamInvitation[] = [
+  {
+    id: 'invite-wisconsin-jane',
+    teamId: 'team-wisconsin',
+    email: 'jane.bennett@example.edu',
+    intendedRole: 'SAILOR',
+    sailorId: 'team-wisconsin-sailor-1',
+    invitedByUserId: 'user-manager-wisconsin',
+    tokenHash: 'sha256-demo-jane-bennett',
+    status: 'PENDING',
+    expiresAt: '2026-10-01T00:00:00.000Z',
+    createdAt: now,
+    updatedAt: now,
+  },
+  {
+    id: 'invite-wisconsin-assistant',
+    teamId: 'team-wisconsin',
+    email: 'assistant.coach@example.edu',
+    intendedRole: 'TEAM_MANAGER',
+    invitedByUserId: 'user-manager-wisconsin',
+    tokenHash: 'sha256-demo-assistant-coach',
+    status: 'PENDING',
+    expiresAt: '2026-10-01T00:00:00.000Z',
+    createdAt: now,
+    updatedAt: now,
+  },
+];
+
+export const sailorAccountLinks: SailorAccountLink[] = [
+  {
+    id: 'link-wisconsin-alex',
+    sailorId: 'team-wisconsin-sailor-2',
+    userId: 'user-manager-wisconsin',
+    sourceInvitationId: 'invite-wisconsin-jane',
+    verifiedAt: '2026-09-01T15:30:00.000Z',
+  },
+];
+
+export const teamBoats: TeamBoat[] = [
+  boat('boat-wisconsin-420-1', 'team-wisconsin', '420', 'UW-01', 'Mendota One', 'USA 8124'),
+  boat('boat-wisconsin-420-2', 'team-wisconsin', '420', 'UW-02', 'Bascom', 'USA 8172'),
+  boat('boat-wisconsin-fj-1', 'team-wisconsin', 'FJ', 'UW-FJ-4', 'Cardinal', 'USA 5211'),
 ];
 
 export const eventUserRoles: EventUserRole[] = [
@@ -374,6 +448,14 @@ export function getAssignmentsForEntry(entryId: string) {
     .sort((a, b) => a.divisionId.localeCompare(b.divisionId) || a.startRaceNumber - b.startRaceNumber);
 }
 
+export function getTeamInvitations(teamId: string) {
+  return teamInvitations.filter((invite) => invite.teamId === teamId);
+}
+
+export function getTeamBoats(teamId: string) {
+  return teamBoats.filter((boatItem) => boatItem.teamId === teamId && boatItem.active);
+}
+
 export function getTeamResults(teamId: string) {
   return eventEntries
     .filter((entry) => entry.teamId === teamId)
@@ -423,13 +505,56 @@ function team(
   shortName: string,
   slug: string,
   conferenceId: string,
+  organizationId?: string,
 ): Team {
+  return {
+    id,
+    organizationId,
+    name,
+    shortName,
+    slug,
+    conferenceId,
+    active: true,
+    createdAt: now,
+    updatedAt: now,
+  };
+}
+
+function organization(
+  id: string,
+  name: string,
+  shortName: string,
+  slug: string,
+  type: 'UNIVERSITY' | 'YACHT_CLUB' | 'ASSOCIATION',
+  primaryTeamId?: string,
+): Organization {
   return {
     id,
     name,
     shortName,
     slug,
-    conferenceId,
+    type,
+    primaryTeamId,
+    createdAt: now,
+    updatedAt: now,
+  };
+}
+
+function boat(
+  id: string,
+  teamId: string,
+  boatClass: string,
+  hullNumber: string,
+  hullName: string,
+  sailNumber: string,
+): TeamBoat {
+  return {
+    id,
+    teamId,
+    boatClass,
+    hullNumber,
+    hullName,
+    sailNumber,
     active: true,
     createdAt: now,
     updatedAt: now,

@@ -10,11 +10,14 @@ import {
   getEventResults,
 } from '@/lib/seed-data';
 
-export const dynamic = 'force-dynamic';
-
 type PageProps = {
   params: Promise<{ slug: string }>;
 };
+
+export async function generateStaticParams() {
+  const { events } = await import('@/lib/seed-data');
+  return events.map((event) => ({ slug: event.slug }));
+}
 
 export default async function ScorerEventPage({ params }: PageProps) {
   const { slug } = await params;

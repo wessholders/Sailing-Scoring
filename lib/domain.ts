@@ -8,7 +8,18 @@ export type RaceStatus = 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETED' | 'ABANDONED'
 
 export type SailingRole = 'SKIPPER' | 'CREW';
 
-export type UserRole = 'PLATFORM_ADMIN' | 'TEAM_MANAGER' | 'SCORER' | 'EVENT_ADMIN';
+export type OrganizationType = 'UNIVERSITY' | 'YACHT_CLUB' | 'ASSOCIATION';
+
+export type UserRole =
+  | 'PLATFORM_ADMIN'
+  | 'ORGANIZATION_ADMIN'
+  | 'TEAM_ADMIN'
+  | 'TEAM_MANAGER'
+  | 'SAILOR'
+  | 'SCORER'
+  | 'EVENT_ADMIN';
+
+export type InvitationStatus = 'PENDING' | 'ACCEPTED' | 'EXPIRED' | 'REVOKED';
 
 export type ScoringProfileCode = 'ICSA_FLEET';
 
@@ -29,6 +40,24 @@ export type User = {
   linkedSailorId?: Id;
   createdAt: string;
   updatedAt: string;
+};
+
+export type Organization = {
+  id: Id;
+  name: string;
+  shortName: string;
+  slug: string;
+  type: OrganizationType;
+  primaryTeamId?: Id;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type OrganizationUserRole = {
+  id: Id;
+  organizationId: Id;
+  userId: Id;
+  role: 'ORGANIZATION_ADMIN';
 };
 
 export type Sailor = {
@@ -52,6 +81,7 @@ export type Conference = {
 
 export type Team = {
   id: Id;
+  organizationId?: Id;
   name: string;
   shortName: string;
   slug: string;
@@ -75,9 +105,46 @@ export type TeamMembership = {
   id: Id;
   teamId: Id;
   sailorId: Id;
+  invitedByUserId?: Id;
+  sourceInvitationId?: Id;
   startSeasonId: Id;
   endSeasonId?: Id;
   active: boolean;
+};
+
+export type TeamInvitation = {
+  id: Id;
+  teamId: Id;
+  email: string;
+  intendedRole: 'SAILOR' | 'TEAM_MANAGER' | 'TEAM_ADMIN';
+  sailorId?: Id;
+  invitedByUserId: Id;
+  tokenHash: string;
+  status: InvitationStatus;
+  expiresAt: string;
+  acceptedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type SailorAccountLink = {
+  id: Id;
+  sailorId: Id;
+  userId: Id;
+  sourceInvitationId?: Id;
+  verifiedAt: string;
+};
+
+export type TeamBoat = {
+  id: Id;
+  teamId: Id;
+  boatClass: string;
+  hullNumber?: string;
+  hullName?: string;
+  sailNumber: string;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
 };
 
 export type ScoringProfile = {
@@ -162,7 +229,7 @@ export type UserTeamRole = {
   id: Id;
   userId: Id;
   teamId: Id;
-  role: 'TEAM_MANAGER';
+  role: 'TEAM_MANAGER' | 'TEAM_ADMIN';
 };
 
 export type EventUserRole = {

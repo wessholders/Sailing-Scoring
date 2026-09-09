@@ -11,8 +11,6 @@ import {
   teams,
 } from '@/lib/seed-data';
 
-export const dynamic = 'force-dynamic';
-
 export default async function AdminPage() {
   const user = await getCurrentUser();
   const liveEvent = events.find((event) => event.status === 'LIVE');

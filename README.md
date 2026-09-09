@@ -17,6 +17,7 @@ The current implementation includes:
 - Admin dashboard for event creation, entries, scorer concepts, and audit history
 - Deterministic ICSA fleet scoring engine with tests
 - D1-ready relational schema definition
+- GitHub Pages static preview workflow
 - Realistic fictional seed data
 
 ## Architecture
@@ -34,12 +35,15 @@ components/
   scorer-race-entry.tsx         Client-side fast entry and validation UI
 db/
   schema.ts                     D1/SQLite schema statements and indexes
+docs/
+  backend-plan.md               Account, invitation, organization, and fleet plan
 lib/
   auth/permissions.ts           Platform-header auth and server-side permissions
   domain.ts                     Core domain types
   scoring/index.ts              ScoringProfile and IcsaFleetScoringEngine
   seed-data.ts                  Realistic development data
   validation/scoring.ts         Race result validation
+  workflows/team-invitations.ts Team invitation workflow logic
 tests/
   scoring.test.ts               Core scoring engine tests
 ```
@@ -80,8 +84,24 @@ npm run lint
 npm run build
 ```
 
+## GitHub Pages Preview
+
+This repo includes a GitHub Actions workflow at `.github/workflows/pages.yml`.
+
+After pushing to `main`, enable GitHub Pages for the repository with source set to GitHub Actions. The static preview will build with:
+
+```bash
+npm run build:pages
+```
+
+Expected project-page URL:
+
+```text
+https://wessholders.github.io/Sailing-Scoring/
+```
+
 ## Environment
 
 Use `.env.example` as the documented template. Local `.env` files are ignored by Git.
 
-The project is configured with a logical D1 binding named `DB` in `.openai/hosting.json`; hosted runtime values should be managed through Sites.
+The project is configured with a logical D1 binding named `DB` in `.openai/hosting.json`; hosted runtime values should be managed through the eventual production host. GitHub Pages is a static preview and does not run the backend.

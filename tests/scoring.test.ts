@@ -8,6 +8,10 @@ import {
   getEventStandings,
   raceResults,
 } from '../lib/seed-data.ts';
+import {
+  acceptTeamInvitation,
+  createTeamInvitation,
+} from '../lib/workflows/team-invitations.ts';
 
 const entries: EventEntry[] = [
   entry('entry-alpha', 'team-alpha'),
@@ -198,6 +202,70 @@ test('seed results include the required initial status-code coverage', () => {
   }
 });
 
+test('team invitation creation normalizes email and stores token hash only', () => {
+  const invitation = createTeamInvitation({
+    id: 'invite-demo',
+    teamId: 'team-alpha',
+    email: ' New.Sailor@Example.edu ',
+    intendedRole: 'SAILOR',
+    invitedByUserId: 'user-manager',
+    tokenHash: 'sha256-token',
+    now: '2026-09-09T00:00:00.000Z',
+    expiresAt: '2026-10-09T00:00:00.000Z',
+    sailorId: 'sailor-alpha',
+  });
+
+  assert.equal(invitation.email, 'new.sailor@example.edu');
+  assert.equal(invitation.tokenHash, 'sha256-token');
+  assert.equal(invitation.status, 'PENDING');
+});
+
+test('accepting a sailor invitation creates membership and account link', () => {
+  const invitation = createTeamInvitation({
+    id: 'invite-sailor',
+    teamId: 'team-alpha',
+    email: 'sailor@example.edu',
+    intendedRole: 'SAILOR',
+    invitedByUserId: 'user-manager',
+    tokenHash: 'sha256-token',
+    now: '2026-09-09T00:00:00.000Z',
+    expiresAt: '2026-10-09T00:00:00.000Z',
+    sailorId: 'sailor-alpha',
+  });
+  const accepted = acceptTeamInvitation({
+    invitation,
+    user: user('user-sailor', 'sailor@example.edu'),
+    seasonId: 'season-fall-2026',
+    now: '2026-09-10T00:00:00.000Z',
+  });
+
+  assert.equal(accepted.invitation.status, 'ACCEPTED');
+  assert.equal(accepted.membership?.teamId, 'team-alpha');
+  assert.equal(accepted.sailorAccountLink?.sailorId, 'sailor-alpha');
+});
+
+test('accepting a manager invitation grants team role without sailor membership', () => {
+  const invitation = createTeamInvitation({
+    id: 'invite-manager',
+    teamId: 'team-alpha',
+    email: 'manager@example.edu',
+    intendedRole: 'TEAM_MANAGER',
+    invitedByUserId: 'user-admin',
+    tokenHash: 'sha256-token',
+    now: '2026-09-09T00:00:00.000Z',
+    expiresAt: '2026-10-09T00:00:00.000Z',
+  });
+  const accepted = acceptTeamInvitation({
+    invitation,
+    user: user('user-manager', 'manager@example.edu'),
+    seasonId: 'season-fall-2026',
+    now: '2026-09-10T00:00:00.000Z',
+  });
+
+  assert.equal(accepted.teamRole?.role, 'TEAM_MANAGER');
+  assert.equal(accepted.membership, undefined);
+});
+
 function entry(id: string, teamId: string): EventEntry {
   return {
     id,
@@ -228,6 +296,16 @@ function result(raceId: string, eventEntryId: string, finishPosition: number): R
     eventEntryId,
     finishPosition,
     statusCode: null,
+    createdAt: '2026-09-09T00:00:00.000Z',
+    updatedAt: '2026-09-09T00:00:00.000Z',
+  };
+}
+
+function user(id: string, email: string) {
+  return {
+    id,
+    email,
+    name: email,
     createdAt: '2026-09-09T00:00:00.000Z',
     updatedAt: '2026-09-09T00:00:00.000Z',
   };
