@@ -78,6 +78,12 @@ export default async function EventPage({ params }: PageProps) {
                 {item}
               </a>
             ))}
+            <Link
+              className="rounded-md bg-[#193f3a] px-3 py-2 text-white"
+              href={`/scorer/events/${event.slug}`}
+            >
+              Score Event
+            </Link>
           </nav>
         </div>
       </header>

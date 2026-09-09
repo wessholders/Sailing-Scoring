@@ -3,11 +3,21 @@ import test from 'node:test';
 import type { Division, EventEntry, Race, RaceResult } from '../lib/domain.ts';
 import { defaultScoringEngine } from '../lib/scoring/index.ts';
 import {
+  eventRegistrationInvites,
   eventEntries,
+  getEventBySlug,
+  getEventEntries,
+  getEventRegistrationInvites,
+  getRosterForTeam,
   getAssignmentsForEntry,
   getEventStandings,
+  getTeamBySlug,
   raceResults,
 } from '../lib/seed-data.ts';
+import {
+  acceptEventRegistrationInvite,
+  createEventRegistrationInvite,
+} from '../lib/workflows/event-registration.ts';
 import {
   acceptTeamInvitation,
   createTeamInvitation,
@@ -200,6 +210,98 @@ test('seed results include the required initial status-code coverage', () => {
   for (const status of ['DNF', 'OCS', 'DSQ', 'BKD', 'BYE']) {
     assert.ok(statuses.has(status as never), `${status} should exist in seed data`);
   }
+});
+
+test('texas a&m has a 20 sailor active roster', () => {
+  const team = getTeamBySlug('texas-am');
+
+  assert.ok(team);
+  assert.equal(getRosterForTeam(team.id).length, 20);
+});
+
+test('aggie open is hosted by texas a&m with three visiting schools', () => {
+  const event = getEventBySlug('aggie-open-2026');
+  const host = getTeamBySlug('texas-am');
+
+  assert.ok(event);
+  assert.ok(host);
+  assert.equal(event.hostTeamId, host.id);
+
+  const entries = getEventEntries(event.id);
+  const visitingEntries = entries.filter((entryItem) => entryItem.teamId !== host.id);
+
+  assert.equal(entries.length, 4);
+  assert.equal(visitingEntries.length, 3);
+});
+
+test('aggie open visiting teams have registration links and lineup assignments', () => {
+  const event = getEventBySlug('aggie-open-2026');
+
+  assert.ok(event);
+
+  const invites = getEventRegistrationInvites(event.id);
+  const entries = getEventEntries(event.id);
+
+  assert.equal(invites.length, 3);
+  assert.ok(invites.some((invite) => invite.status === 'NEEDS_ACCOUNT'));
+  assert.ok(
+    eventRegistrationInvites.every((invite) =>
+      invite.registrationUrl.startsWith('https://wessholders.github.io/Sailing-Scoring/register/events/'),
+    ),
+  );
+
+  for (const entryItem of entries) {
+    assert.equal(getAssignmentsForEntry(entryItem.id).length >= 4, true);
+  }
+});
+
+test('event registration invite creation exposes raw link but stores token hash', () => {
+  const invite = createEventRegistrationInvite({
+    id: 'event-invite-demo',
+    eventId: 'event-demo',
+    teamName: ' Demo University ',
+    contactEmail: ' Sailing@Demo.edu ',
+    token: 'raw-demo-token',
+    tokenHash: 'sha256-demo-token',
+    baseUrl: 'https://example.com/',
+    createdByUserId: 'user-host',
+    now: '2026-09-09T00:00:00.000Z',
+  });
+
+  assert.equal(invite.teamName, 'Demo University');
+  assert.equal(invite.contactEmail, 'sailing@demo.edu');
+  assert.equal(invite.tokenHash, 'sha256-demo-token');
+  assert.equal(invite.registrationUrl, 'https://example.com/register/events/event-demo?token=raw-demo-token');
+});
+
+test('accepting event registration creates an event entry', () => {
+  const texas = getTeamBySlug('texas');
+
+  assert.ok(texas);
+
+  const invite = createEventRegistrationInvite({
+    id: 'event-invite-texas-demo',
+    eventId: 'event-demo',
+    teamName: 'University of Texas',
+    contactEmail: 'sailing@utexas.edu',
+    status: 'NEEDS_ACCOUNT',
+    token: 'raw-token',
+    tokenHash: 'sha256-token',
+    baseUrl: 'https://example.com',
+    createdByUserId: 'user-host',
+    now: '2026-09-09T00:00:00.000Z',
+  });
+  const accepted = acceptEventRegistrationInvite({
+    invite,
+    team: texas,
+    seed: 4,
+    now: '2026-09-10T00:00:00.000Z',
+  });
+
+  assert.equal(accepted.invite.status, 'REGISTERED');
+  assert.equal(accepted.entry.eventId, 'event-demo');
+  assert.equal(accepted.entry.teamId, texas.id);
+  assert.equal(accepted.entry.seed, 4);
 });
 
 test('team invitation creation normalizes email and stores token hash only', () => {

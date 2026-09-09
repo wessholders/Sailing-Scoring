@@ -13,8 +13,9 @@ The current implementation includes:
 - Sailor profiles with derived participation history
 - Team profiles with historical roster membership and recent results
 - Scorer dashboard optimized for quick race entry and corrections
-- Team-manager dashboard for roster and lineup review
-- Admin dashboard for event creation, entries, scorer concepts, and audit history
+- Team-manager dashboard for Texas A&M roster, lineup edits, invite queue, and fleet assets
+- Host admin dashboard for event creation, team registration links, entries, scorer concepts, and audit history
+- Registration landing route for event invite links
 - Deterministic ICSA fleet scoring engine with tests
 - D1-ready relational schema definition
 - GitHub Pages static preview workflow
@@ -26,13 +27,16 @@ The current implementation includes:
 app/
   page.tsx                      Public landing and regatta discovery
   events/[slug]/page.tsx        Public event overview, scores, sailors, info
+  register/events/[eventId]/     Event registration/account setup preview
   sailors/[slug]/page.tsx       Persistent sailor profile
   teams/[slug]/page.tsx         Persistent team profile
   scorer/events/[slug]/page.tsx Fast scorer workflow
   team-manager/page.tsx         Team manager workflow
   admin/page.tsx                Platform admin workflow
 components/
+  event-builder.tsx             Host event setup and registration-link workflow
   scorer-race-entry.tsx         Client-side fast entry and validation UI
+  team-lineup-editor.tsx        Attending-team lineup editor
 db/
   schema.ts                     D1/SQLite schema statements and indexes
 docs/
@@ -43,10 +47,21 @@ lib/
   scoring/index.ts              ScoringProfile and IcsaFleetScoringEngine
   seed-data.ts                  Realistic development data
   validation/scoring.ts         Race result validation
+  workflows/event-registration.ts Event registration workflow logic
   workflows/team-invitations.ts Team invitation workflow logic
 tests/
   scoring.test.ts               Core scoring engine tests
 ```
+
+## Current Demo Flow
+
+Use this path to test the next product slice with dummy data:
+
+1. Open `/admin` to act as the Texas A&M host admin for Aggie Open 2026.
+2. Use the event controls to create/reset the event, add visiting schools, and reveal registration links.
+3. Open a registration link to preview team account setup and event registration.
+4. Open `/team-manager` to review Texas A&M's 20 active sailors and edit attending-team lineups.
+5. Open `/scorer/events/aggie-open-2026` to score the live event and preview recalculated standings.
 
 ## Scoring Model
 

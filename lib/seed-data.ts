@@ -4,6 +4,7 @@ import type {
   Division,
   Event,
   EventEntry,
+  EventRegistrationInvite,
   EventUserRole,
   Organization,
   OrganizationUserRole,
@@ -22,6 +23,7 @@ import type {
   UserTeamRole,
 } from './domain';
 import { defaultScoringEngine, icsaFleetProfile } from './scoring/index.ts';
+import { createEventRegistrationInvite } from './workflows/event-registration.ts';
 
 const now = '2026-09-09T12:00:00.000Z';
 
@@ -49,9 +51,14 @@ export const conferences: Conference[] = [
   { id: 'conf-neisa', name: 'New England Intercollegiate Sailing Association', shortName: 'NEISA', slug: 'neisa' },
   { id: 'conf-maisa', name: 'Middle Atlantic Intercollegiate Sailing Association', shortName: 'MAISA', slug: 'maisa' },
   { id: 'conf-saisa', name: 'South Atlantic Intercollegiate Sailing Association', shortName: 'SAISA', slug: 'saisa' },
+  { id: 'conf-seisa', name: 'Southeastern Intercollegiate Sailing Association', shortName: 'SEISA', slug: 'seisa' },
 ];
 
 export const organizations: Organization[] = [
+  organization('org-texas-am', 'Texas A&M University', 'Texas A&M', 'texas-am', 'UNIVERSITY', 'team-texas-am'),
+  organization('org-rice', 'Rice University', 'Rice', 'rice', 'UNIVERSITY', 'team-rice'),
+  organization('org-texas', 'University of Texas', 'Texas', 'texas', 'UNIVERSITY', 'team-texas'),
+  organization('org-houston', 'University of Houston', 'Houston', 'houston', 'UNIVERSITY', 'team-houston'),
   organization('org-wisconsin', 'University of Wisconsin', 'Wisconsin', 'wisconsin', 'UNIVERSITY', 'team-wisconsin'),
   organization('org-michigan', 'University of Michigan', 'Michigan', 'michigan', 'UNIVERSITY', 'team-michigan'),
   organization('org-northwestern', 'Northwestern University', 'Northwestern', 'northwestern', 'UNIVERSITY', 'team-northwestern'),
@@ -67,6 +74,10 @@ export const organizations: Organization[] = [
 ];
 
 export const teams: Team[] = [
+  team('team-texas-am', 'Texas A&M University', 'Texas A&M', 'texas-am', 'conf-seisa', 'org-texas-am'),
+  team('team-rice', 'Rice University', 'Rice', 'rice', 'conf-seisa', 'org-rice'),
+  team('team-texas', 'University of Texas', 'Texas', 'texas', 'conf-seisa', 'org-texas'),
+  team('team-houston', 'University of Houston', 'Houston', 'houston', 'conf-seisa', 'org-houston'),
   team('team-wisconsin', 'University of Wisconsin', 'Wisconsin', 'wisconsin', 'conf-mcsa', 'org-wisconsin'),
   team('team-michigan', 'University of Michigan', 'Michigan', 'michigan', 'conf-mcsa', 'org-michigan'),
   team('team-northwestern', 'Northwestern University', 'Northwestern', 'northwestern', 'conf-mcsa', 'org-northwestern'),
@@ -81,6 +92,31 @@ export const teams: Team[] = [
 ];
 
 const sailorNamesByTeam: Record<string, Array<[string, string, number]>> = {
+  'team-texas-am': [
+    ['Avery', 'Collins', 2027],
+    ['Brooke', 'Ramirez', 2028],
+    ['Camden', 'Hayes', 2026],
+    ['Drew', 'Santos', 2029],
+    ['Emerson', 'Patel', 2027],
+    ['Finley', 'Morgan', 2028],
+    ['Graham', 'Walker', 2026],
+    ['Harper', 'Lewis', 2029],
+    ['Isla', 'Bennett', 2027],
+    ['Jonah', 'Reyes', 2028],
+    ['Kai', 'Thompson', 2026],
+    ['Lena', 'Foster', 2029],
+    ['Mason', 'Diaz', 2027],
+    ['Nina', 'Carter', 2028],
+    ['Owen', 'Bryant', 2026],
+    ['Parker', 'Hughes', 2029],
+    ['Quinn', 'Morris', 2027],
+    ['Reese', 'Bailey', 2028],
+    ['Sloane', 'Cooper', 2026],
+    ['Tyler', 'Price', 2029],
+  ],
+  'team-rice': [['Maya', 'Chen', 2027], ['Lucas', 'Perry', 2028], ['Eva', 'Kim', 2026], ['Noah', 'Singh', 2029], ['Tara', 'Bell', 2027], ['Eli', 'James', 2028]],
+  'team-texas': [['Claire', 'Adams', 2027], ['Ben', 'Lopez', 2028], ['Julia', 'Young', 2026], ['Marco', 'Gomez', 2029], ['Tessa', 'Cole', 2027], ['Andre', 'Hill', 2028]],
+  'team-houston': [['Riley', 'Flores', 2027], ['Sarah', 'Nguyen', 2028], ['Mateo', 'Ross', 2026], ['Leah', 'Murphy', 2029], ['Ethan', 'Ward', 2027], ['Nora', 'Reed', 2028]],
   'team-wisconsin': [['Jane', 'Bennett', 2028], ['Alex', 'Reed', 2027], ['Ryan', 'Hall', 2026], ['Mia', 'Larson', 2029]],
   'team-michigan': [['Clara', 'Wells', 2027], ['Owen', 'Fischer', 2028], ['Nate', 'Hughes', 2026], ['Priya', 'Shah', 2029]],
   'team-northwestern': [['Elena', 'Park', 2028], ['Sam', 'Mercer', 2027], ['Grace', 'Lin', 2026], ['Theo', 'Mason', 2029]],
@@ -120,6 +156,23 @@ export const teamMemberships: TeamMembership[] = sailors.map((sailor) => ({
 export const scoringProfiles = [icsaFleetProfile];
 
 export const events: Event[] = [
+  {
+    id: 'event-aggie-open-2026',
+    name: 'Aggie Open 2026',
+    slug: 'aggie-open-2026',
+    seasonId: 'season-fall-2026',
+    hostTeamId: 'team-texas-am',
+    startDate: '2026-09-09',
+    endDate: '2026-09-10',
+    location: 'Lake Bryan, Bryan, TX',
+    boatClass: 'FJ',
+    status: 'LIVE',
+    scoringProfileId: icsaFleetProfile.id,
+    numberOfDivisions: 2,
+    public: true,
+    createdAt: now,
+    updatedAt: now,
+  },
   {
     id: 'event-fall-fury-2026',
     name: 'Fall Fury 2026',
@@ -173,8 +226,23 @@ export const events: Event[] = [
   },
 ];
 
-export const eventEntries: EventEntry[] = [
-  ...teams.slice(0, 10).map((entryTeam, index) => ({
+const fallFuryEntryTeams = teams.filter((entryTeam) =>
+  [
+    'team-wisconsin',
+    'team-michigan',
+    'team-northwestern',
+    'team-purdue',
+    'team-notre-dame',
+    'team-marquette',
+    'team-yale',
+    'team-georgetown',
+    'team-tulane',
+    'team-charleston',
+  ].includes(entryTeam.id),
+);
+
+const fallFuryEntries: EventEntry[] = [
+  ...fallFuryEntryTeams.map((entryTeam, index) => ({
     id: `entry-fall-fury-${entryTeam.slug}`,
     eventId: 'event-fall-fury-2026',
     teamId: entryTeam.id,
@@ -194,14 +262,76 @@ export const eventEntries: EventEntry[] = [
   },
 ];
 
+const aggieOpenEntryTeams = teams.filter((entryTeam) =>
+  ['team-texas-am', 'team-rice', 'team-texas', 'team-houston'].includes(entryTeam.id),
+);
+
+const aggieOpenEntries: EventEntry[] = aggieOpenEntryTeams.map((entryTeam, index) => ({
+  id: `entry-aggie-open-${entryTeam.slug}`,
+  eventId: 'event-aggie-open-2026',
+  teamId: entryTeam.id,
+  entryName: entryTeam.shortName,
+  shortName: entryTeam.shortName,
+  seed: index + 1,
+  active: true,
+}));
+
+export const eventEntries: EventEntry[] = [...aggieOpenEntries, ...fallFuryEntries];
+
+export const eventRegistrationInvites: EventRegistrationInvite[] = [
+  createEventRegistrationInvite({
+    id: 'event-invite-aggie-open-rice',
+    eventId: 'event-aggie-open-2026',
+    teamId: 'team-rice',
+    teamName: 'Rice University',
+    contactEmail: 'sailing@rice.edu',
+    status: 'REGISTERED',
+    token: 'aggie-open-rice-demo',
+    tokenHash: 'sha256-demo-aggie-open-rice',
+    baseUrl: 'https://wessholders.github.io/Sailing-Scoring',
+    createdByUserId: 'user-manager-texas-am',
+    now,
+  }),
+  createEventRegistrationInvite({
+    id: 'event-invite-aggie-open-texas',
+    eventId: 'event-aggie-open-2026',
+    teamId: 'team-texas',
+    teamName: 'University of Texas',
+    contactEmail: 'sailing@utexas.edu',
+    status: 'NEEDS_ACCOUNT',
+    token: 'aggie-open-texas-demo',
+    tokenHash: 'sha256-demo-aggie-open-texas',
+    baseUrl: 'https://wessholders.github.io/Sailing-Scoring',
+    createdByUserId: 'user-manager-texas-am',
+    now,
+  }),
+  createEventRegistrationInvite({
+    id: 'event-invite-aggie-open-houston',
+    eventId: 'event-aggie-open-2026',
+    teamId: 'team-houston',
+    teamName: 'University of Houston',
+    contactEmail: 'sailing@uh.edu',
+    status: 'INVITED',
+    token: 'aggie-open-houston-demo',
+    tokenHash: 'sha256-demo-aggie-open-houston',
+    baseUrl: 'https://wessholders.github.io/Sailing-Scoring',
+    createdByUserId: 'user-manager-texas-am',
+    now,
+  }),
+];
+
 export const divisions: Division[] = [
+  { id: 'division-aggie-open-a', eventId: 'event-aggie-open-2026', name: 'A Division', code: 'A', displayOrder: 1 },
+  { id: 'division-aggie-open-b', eventId: 'event-aggie-open-2026', name: 'B Division', code: 'B', displayOrder: 2 },
   { id: 'division-fall-fury-a', eventId: 'event-fall-fury-2026', name: 'A Division', code: 'A', displayOrder: 1 },
   { id: 'division-fall-fury-b', eventId: 'event-fall-fury-2026', name: 'B Division', code: 'B', displayOrder: 2 },
 ];
 
 export const races: Race[] = [
-  ...makeRaces('event-fall-fury-2026', 'division-fall-fury-a', 'A', 6, 5),
-  ...makeRaces('event-fall-fury-2026', 'division-fall-fury-b', 'B', 6, 5),
+  ...makeRaces('event-aggie-open-2026', 'division-aggie-open-a', 4, 1, '2026-09-09'),
+  ...makeRaces('event-aggie-open-2026', 'division-aggie-open-b', 4, 1, '2026-09-09'),
+  ...makeRaces('event-fall-fury-2026', 'division-fall-fury-a', 6, 5),
+  ...makeRaces('event-fall-fury-2026', 'division-fall-fury-b', 6, 5),
 ];
 
 const aFinishes = [
@@ -220,6 +350,10 @@ const bFinishes = [
   [2, 3, 1, 4, 6, 5, 7, 8, 9, 10, 11],
 ];
 
+const aggieAFinishes = [[1, 3, 2, 4]];
+
+const aggieBFinishes = [[2, 1, 4, 3]];
+
 const statusOverrides: Record<string, RaceResultStatusCode> = {
   'race-division-fall-fury-a-2:entry-fall-fury-notre-dame': 'OCS',
   'race-division-fall-fury-a-3:entry-fall-fury-marquette': 'DNF',
@@ -230,13 +364,22 @@ const statusOverrides: Record<string, RaceResultStatusCode> = {
 };
 
 export const raceResults: RaceResult[] = [
-  ...makeResults('division-fall-fury-a', aFinishes),
-  ...makeResults('division-fall-fury-b', bFinishes),
+  ...makeResults('division-aggie-open-a', aggieOpenEntries, aggieAFinishes),
+  ...makeResults('division-aggie-open-b', aggieOpenEntries, aggieBFinishes),
+  ...makeResults('division-fall-fury-a', fallFuryEntries, aFinishes),
+  ...makeResults('division-fall-fury-b', fallFuryEntries, bFinishes),
 ];
 
 export const sailingAssignments: SailingAssignment[] = makeAssignments();
 
 export const users: User[] = [
+  {
+    id: 'user-manager-texas-am',
+    name: 'Jordan Castillo',
+    email: 'manager@aggiesailing.test',
+    createdAt: now,
+    updatedAt: now,
+  },
   {
     id: 'user-admin',
     name: 'Morgan Blake',
@@ -262,6 +405,12 @@ export const users: User[] = [
 
 export const organizationUserRoles: OrganizationUserRole[] = [
   {
+    id: 'our-texas-am-admin',
+    organizationId: 'org-texas-am',
+    userId: 'user-manager-texas-am',
+    role: 'ORGANIZATION_ADMIN',
+  },
+  {
     id: 'our-wisconsin-admin',
     organizationId: 'org-wisconsin',
     userId: 'user-manager-wisconsin',
@@ -271,6 +420,12 @@ export const organizationUserRoles: OrganizationUserRole[] = [
 
 export const userTeamRoles: UserTeamRole[] = [
   {
+    id: 'utr-texas-am-manager',
+    userId: 'user-manager-texas-am',
+    teamId: 'team-texas-am',
+    role: 'TEAM_ADMIN',
+  },
+  {
     id: 'utr-wisconsin-manager',
     userId: 'user-manager-wisconsin',
     teamId: 'team-wisconsin',
@@ -279,6 +434,31 @@ export const userTeamRoles: UserTeamRole[] = [
 ];
 
 export const teamInvitations: TeamInvitation[] = [
+  {
+    id: 'invite-texas-am-new-sailor',
+    teamId: 'team-texas-am',
+    email: 'new.sailor@tamu.edu',
+    intendedRole: 'SAILOR',
+    sailorId: 'team-texas-am-sailor-20',
+    invitedByUserId: 'user-manager-texas-am',
+    tokenHash: 'sha256-demo-texas-am-new-sailor',
+    status: 'PENDING',
+    expiresAt: '2026-10-01T00:00:00.000Z',
+    createdAt: now,
+    updatedAt: now,
+  },
+  {
+    id: 'invite-texas-am-assistant',
+    teamId: 'team-texas-am',
+    email: 'assistant.coach@tamu.edu',
+    intendedRole: 'TEAM_MANAGER',
+    invitedByUserId: 'user-manager-texas-am',
+    tokenHash: 'sha256-demo-texas-am-assistant',
+    status: 'PENDING',
+    expiresAt: '2026-10-01T00:00:00.000Z',
+    createdAt: now,
+    updatedAt: now,
+  },
   {
     id: 'invite-wisconsin-jane',
     teamId: 'team-wisconsin',
@@ -317,12 +497,28 @@ export const sailorAccountLinks: SailorAccountLink[] = [
 ];
 
 export const teamBoats: TeamBoat[] = [
+  boat('boat-texas-am-fj-1', 'team-texas-am', 'FJ', 'TAMU-01', 'Reveille', 'USA 7112'),
+  boat('boat-texas-am-fj-2', 'team-texas-am', 'FJ', 'TAMU-02', 'Century Tree', 'USA 7118'),
+  boat('boat-texas-am-fj-3', 'team-texas-am', 'FJ', 'TAMU-03', 'Maroon', 'USA 7124'),
+  boat('boat-texas-am-fj-4', 'team-texas-am', 'FJ', 'TAMU-04', 'White', 'USA 7130'),
   boat('boat-wisconsin-420-1', 'team-wisconsin', '420', 'UW-01', 'Mendota One', 'USA 8124'),
   boat('boat-wisconsin-420-2', 'team-wisconsin', '420', 'UW-02', 'Bascom', 'USA 8172'),
   boat('boat-wisconsin-fj-1', 'team-wisconsin', 'FJ', 'UW-FJ-4', 'Cardinal', 'USA 5211'),
 ];
 
 export const eventUserRoles: EventUserRole[] = [
+  {
+    id: 'eur-aggie-open-admin',
+    userId: 'user-manager-texas-am',
+    eventId: 'event-aggie-open-2026',
+    role: 'EVENT_ADMIN',
+  },
+  {
+    id: 'eur-aggie-open-scorer',
+    userId: 'user-manager-texas-am',
+    eventId: 'event-aggie-open-2026',
+    role: 'SCORER',
+  },
   {
     id: 'eur-fall-fury-scorer',
     userId: 'user-scorer',
@@ -362,6 +558,10 @@ export const auditLog: AuditLogEntry[] = [
 
 export function getEventBySlug(slug: string) {
   return events.find((event) => event.slug === slug);
+}
+
+export function getEventById(id: string) {
+  return events.find((event) => event.id === id);
 }
 
 export function getTeamById(id: string) {
@@ -450,6 +650,10 @@ export function getAssignmentsForEntry(entryId: string) {
 
 export function getTeamInvitations(teamId: string) {
   return teamInvitations.filter((invite) => invite.teamId === teamId);
+}
+
+export function getEventRegistrationInvites(eventId: string) {
+  return eventRegistrationInvites.filter((invite) => invite.eventId === eventId);
 }
 
 export function getTeamBoats(teamId: string) {
@@ -564,9 +768,9 @@ function boat(
 function makeRaces(
   eventId: string,
   divisionId: string,
-  code: string,
   count: number,
   completedCount: number,
+  raceDate = '2026-09-12',
 ): Race[] {
   return Array.from({ length: count }, (_, index) => {
     const raceNumber = index + 1;
@@ -577,8 +781,8 @@ function makeRaces(
       divisionId,
       raceNumber,
       status: completed ? 'COMPLETED' : 'IN_PROGRESS',
-      startedAt: `2026-09-12T${String(13 + index).padStart(2, '0')}:05:00.000Z`,
-      completedAt: completed ? `2026-09-12T${String(13 + index).padStart(2, '0')}:42:00.000Z` : undefined,
+      startedAt: `${raceDate}T${String(13 + index).padStart(2, '0')}:05:00.000Z`,
+      completedAt: completed ? `${raceDate}T${String(13 + index).padStart(2, '0')}:42:00.000Z` : undefined,
       countsTowardStandings: completed,
       createdAt: now,
       updatedAt: now,
@@ -586,10 +790,10 @@ function makeRaces(
   });
 }
 
-function makeResults(divisionId: string, finishes: number[][]): RaceResult[] {
+function makeResults(divisionId: string, entries: EventEntry[], finishes: number[][]): RaceResult[] {
   return finishes.flatMap((raceFinishes, raceIndex) => {
     const raceId = `race-${divisionId}-${raceIndex + 1}`;
-    return eventEntries.map((entry, entryIndex) => {
+    return entries.map((entry, entryIndex) => {
       const override = statusOverrides[`${raceId}:${entry.id}`] ?? null;
       return {
         id: `result-${raceId}-${entry.id}`,
@@ -606,22 +810,30 @@ function makeResults(divisionId: string, finishes: number[][]): RaceResult[] {
 }
 
 function makeAssignments(): SailingAssignment[] {
-  return eventEntries.flatMap((entry, entryIndex) => {
+  return eventEntries.flatMap((entry) => {
     const teamRoster = getRosterForTeam(entry.teamId);
+    const eventDivisions = getEventDivisions(entry.eventId);
+    const firstDivision = eventDivisions[0];
+    const secondDivision = eventDivisions[1];
     const skipperA = teamRoster[0];
     const crewA = teamRoster[1];
     const skipperB = teamRoster[2] ?? teamRoster[0];
     const crewB = teamRoster[3] ?? teamRoster[1];
     const base = [
-      assignment(entry.id, 'division-fall-fury-a', skipperA?.id, 'SKIPPER', 1),
-      assignment(entry.id, 'division-fall-fury-a', crewA?.id, 'CREW', 1),
-      assignment(entry.id, 'division-fall-fury-b', skipperB?.id, 'SKIPPER', 1),
-      assignment(entry.id, 'division-fall-fury-b', crewB?.id, 'CREW', 1),
+      assignment(entry.id, firstDivision?.id, skipperA?.id, 'SKIPPER', 1),
+      assignment(entry.id, firstDivision?.id, crewA?.id, 'CREW', 1),
+      assignment(entry.id, secondDivision?.id, skipperB?.id, 'SKIPPER', 1),
+      assignment(entry.id, secondDivision?.id, crewB?.id, 'CREW', 1),
     ];
 
-    if (entryIndex === 0 && teamRoster[2]) {
-      base[0] = assignment(entry.id, 'division-fall-fury-a', skipperA?.id, 'SKIPPER', 1, 4);
-      base.push(assignment(entry.id, 'division-fall-fury-a', teamRoster[2].id, 'SKIPPER', 5));
+    if (entry.id === 'entry-fall-fury-wisconsin' && firstDivision && teamRoster[2]) {
+      base[0] = assignment(entry.id, firstDivision.id, skipperA?.id, 'SKIPPER', 1, 4);
+      base.push(assignment(entry.id, firstDivision.id, teamRoster[2].id, 'SKIPPER', 5));
+    }
+
+    if (entry.id === 'entry-aggie-open-texas-am' && firstDivision && teamRoster[4] && teamRoster[5]) {
+      base.push(assignment(entry.id, firstDivision.id, teamRoster[4].id, 'SKIPPER', 3));
+      base.push(assignment(entry.id, firstDivision.id, teamRoster[5].id, 'CREW', 3));
     }
 
     return base.filter((item): item is SailingAssignment => Boolean(item));
@@ -630,13 +842,13 @@ function makeAssignments(): SailingAssignment[] {
 
 function assignment(
   eventEntryId: string,
-  divisionId: string,
+  divisionId: string | undefined,
   sailorId: string | undefined,
   role: 'SKIPPER' | 'CREW',
   startRaceNumber: number,
   endRaceNumber?: number,
 ): SailingAssignment | null {
-  if (!sailorId) {
+  if (!divisionId || !sailorId) {
     return null;
   }
 

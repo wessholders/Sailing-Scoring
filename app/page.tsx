@@ -42,7 +42,7 @@ export default function Home() {
             </Link>
             <Link
               className="rounded-md bg-[#193f3a] px-3 py-2 text-white"
-              href="/scorer/events/fall-fury-2026"
+              href="/scorer/events/aggie-open-2026"
             >
               Score Live Event
             </Link>
@@ -72,7 +72,7 @@ export default function Home() {
             <input
               className="mt-2 w-full rounded-md border border-[#cbd6cd] px-3 py-2 outline-none focus:border-[#193f3a]"
               id="global-search"
-              placeholder="Try Fall Fury, Wisconsin, Jane Bennett"
+              placeholder="Try Aggie Open, Texas A&M, Avery Collins"
             />
             <div className="mt-4 grid gap-2">
               {searchableRecords.slice(0, 6).map((record) => (

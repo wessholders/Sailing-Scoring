@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { TeamLineupEditor } from '@/components/team-lineup-editor';
 import { canManageTeam, getCurrentUser } from '@/lib/auth/permissions';
 import {
   getAssignmentsForEntry,
@@ -9,13 +10,14 @@ import {
   getSailorById,
   getTeamBoats,
   getTeamInvitations,
+  getTeamById,
   getTeamBySlug,
 } from '@/lib/seed-data';
 
 export default async function TeamManagerPage() {
   const user = await getCurrentUser();
-  const team = getTeamBySlug('wisconsin');
-  const event = getEventBySlug('fall-fury-2026');
+  const team = getTeamBySlug('texas-am');
+  const event = getEventBySlug('aggie-open-2026');
   const allowed = team ? await canManageTeam(team.id) : false;
 
   if (!team || !event) {
@@ -26,8 +28,29 @@ export default async function TeamManagerPage() {
   const invitations = getTeamInvitations(team.id);
   const boats = getTeamBoats(team.id);
   const entry = getEventEntries(event.id).find((candidate) => candidate.teamId === team.id);
+  const entries = getEventEntries(event.id);
   const divisions = getEventDivisions(event.id);
   const assignments = entry ? getAssignmentsForEntry(entry.id) : [];
+  const lineupTeams = entries.map((eventEntry) => {
+    const entryTeam = getTeamById(eventEntry.teamId);
+    return {
+      entryId: eventEntry.id,
+      entryName: eventEntry.entryName,
+      teamName: entryTeam?.name ?? eventEntry.entryName,
+      sailors: getRosterForTeam(eventEntry.teamId).map((sailor) => ({
+        id: sailor.id,
+        name: `${sailor.firstName} ${sailor.lastName}`,
+        graduationYear: sailor.graduationYear,
+      })),
+      assignments: getAssignmentsForEntry(eventEntry.id).map((assignment) => ({
+        divisionId: assignment.divisionId,
+        role: assignment.role,
+        sailorId: assignment.sailorId,
+        startRaceNumber: assignment.startRaceNumber,
+        endRaceNumber: assignment.endRaceNumber,
+      })),
+    };
+  });
 
   return (
     <main className="min-h-screen bg-[#f7f8f4] text-[#17201b]">
@@ -36,9 +59,9 @@ export default async function TeamManagerPage() {
           <Link className="text-sm font-semibold text-[#55706a]" href="/">
             Back to events
           </Link>
-          <h1 className="mt-8 text-4xl font-semibold tracking-tight">Team Manager</h1>
+          <h1 className="mt-8 text-4xl font-semibold tracking-tight">Texas A&amp;M Team Manager</h1>
           <p className="mt-2 text-[#52645e]">
-            Signed in as {user.name}. Managing {team.name}.
+            Signed in as {user.name}. Managing roster, invite links, fleet assets, and event lineups for {team.name}.
           </p>
         </div>
       </header>
@@ -53,7 +76,7 @@ export default async function TeamManagerPage() {
           <section className="rounded-lg border border-[#d7ded2] bg-white">
             <div className="border-b border-[#d7ded2] px-5 py-4">
               <h2 className="text-xl font-semibold">Roster</h2>
-              <p className="text-sm text-[#66756d]">Membership records are historical and season-aware.</p>
+              <p className="text-sm text-[#66756d]">{roster.length} active sailors are available for lineups and substitutions.</p>
             </div>
             <div className="divide-y divide-[#edf0ea]">
               {roster.map((sailor) => (
@@ -69,6 +92,15 @@ export default async function TeamManagerPage() {
               ))}
             </div>
           </section>
+
+          <TeamLineupEditor
+            divisions={divisions.map((division) => ({
+              id: division.id,
+              name: division.name,
+              code: division.code,
+            }))}
+            teams={lineupTeams}
+          />
 
           <section className="rounded-lg border border-[#d7ded2] bg-white">
             <div className="border-b border-[#d7ded2] px-5 py-4">
@@ -93,7 +125,7 @@ export default async function TeamManagerPage() {
 
         <aside className="space-y-6">
           <section className="rounded-lg border border-[#d7ded2] bg-white p-5">
-            <h2 className="text-xl font-semibold">Fall Fury Lineups</h2>
+            <h2 className="text-xl font-semibold">Host Lineup</h2>
             <div className="mt-4 space-y-5">
               {divisions.map((division) => (
                 <div key={division.id}>

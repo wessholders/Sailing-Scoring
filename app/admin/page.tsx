@@ -1,19 +1,21 @@
 import Link from 'next/link';
+import { EventBuilder } from '@/components/event-builder';
 import { getCurrentUser } from '@/lib/auth/permissions';
 import {
   auditLog,
   events,
+  getEventBySlug,
   getEventEntries,
+  getEventRegistrationInvites,
   getSeasonById,
   getTeamById,
-  scoringProfiles,
-  seasons,
-  teams,
 } from '@/lib/seed-data';
 
 export default async function AdminPage() {
   const user = await getCurrentUser();
-  const liveEvent = events.find((event) => event.status === 'LIVE');
+  const hostEvent = getEventBySlug('aggie-open-2026');
+  const hostTeam = hostEvent ? getTeamById(hostEvent.hostTeamId ?? '') : undefined;
+  const liveEvent = hostEvent ?? events.find((event) => event.status === 'LIVE');
 
   return (
     <main className="min-h-screen bg-[#f7f8f4] text-[#17201b]">
@@ -22,51 +24,41 @@ export default async function AdminPage() {
           <Link className="text-sm font-semibold text-[#55706a]" href="/">
             Back to events
           </Link>
-          <h1 className="mt-8 text-4xl font-semibold tracking-tight">Platform Admin</h1>
+          <h1 className="mt-8 text-4xl font-semibold tracking-tight">Host Admin</h1>
           <p className="mt-2 text-[#52645e]">
-            Signed in as {user.name}. Create events, manage entries, assign scorers, and inspect audit history.
+            Signed in as {user.name}. Create events, manage entries, generate registration links, and score home regattas.
           </p>
         </div>
       </header>
 
       <section className="mx-auto grid max-w-7xl gap-6 px-5 py-8 sm:px-8 lg:grid-cols-[minmax(0,1fr)_420px] lg:px-10">
-        <section className="rounded-lg border border-[#d7ded2] bg-white">
-          <div className="border-b border-[#d7ded2] px-5 py-4">
-            <h2 className="text-xl font-semibold">Create Event</h2>
-            <p className="text-sm text-[#66756d]">Defaults to ICSA Collegiate Fleet Racing.</p>
-          </div>
-          <form className="grid gap-4 p-5 sm:grid-cols-2">
-            <Field label="Event name" value="Fall Fury 2026" />
-            <Field label="Season" value={seasons[0].name} />
-            <Field label="Host" value={teams[0].name} />
-            <Field label="Location" value="Lake Mendota, Madison, WI" />
-            <Field label="Start date" value="2026-09-12" type="date" />
-            <Field label="End date" value="2026-09-13" type="date" />
-            <Field label="Boat class" value="420" />
-            <Field label="Divisions" value="2" type="number" />
-            <label className="block text-sm font-medium sm:col-span-2">
-              Scoring profile
-              <select className="mt-2 w-full rounded-md border border-[#cbd6cd] bg-white px-3 py-2 outline-none focus:border-[#193f3a]" defaultValue={scoringProfiles[0].id}>
-                {scoringProfiles.map((profile) => (
-                  <option key={profile.id} value={profile.id}>
-                    {profile.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <button className="w-fit rounded-md bg-[#193f3a] px-4 py-2 font-semibold text-white" type="button">
-              Create Event
-            </button>
-          </form>
-        </section>
+        {hostEvent && hostTeam && (
+          <EventBuilder
+            event={hostEvent}
+            hostTeam={hostTeam}
+            registrationInvites={getEventRegistrationInvites(hostEvent.id)}
+          />
+        )}
 
         <aside className="space-y-6">
           <section className="rounded-lg border border-[#d7ded2] bg-white p-5">
-            <h2 className="text-xl font-semibold">Event Entries</h2>
-            <p className="mt-1 text-sm text-[#66756d]">Multiple entries can point to one team.</p>
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h2 className="text-xl font-semibold">Event Entries</h2>
+                <p className="mt-1 text-sm text-[#66756d]">Attending teams become scoring entries after registration.</p>
+              </div>
+              {hostEvent && (
+                <Link
+                  className="rounded-md bg-[#193f3a] px-3 py-2 text-sm font-semibold text-white"
+                  href={`/scorer/events/${hostEvent.slug}`}
+                >
+                  Score
+                </Link>
+              )}
+            </div>
             <div className="mt-4 space-y-2">
               {liveEvent &&
-                getEventEntries(liveEvent.id).slice(0, 6).map((entry) => {
+                getEventEntries(liveEvent.id).map((entry) => {
                   const team = getTeamById(entry.teamId);
                   return (
                     <div className="rounded-md bg-[#f7f8f4] px-3 py-2 text-sm" key={entry.id}>
@@ -114,18 +106,5 @@ export default async function AdminPage() {
         </div>
       </section>
     </main>
-  );
-}
-
-function Field({ label, value, type = 'text' }: { label: string; value: string; type?: string }) {
-  return (
-    <label className="block text-sm font-medium">
-      {label}
-      <input
-        className="mt-2 w-full rounded-md border border-[#cbd6cd] px-3 py-2 outline-none focus:border-[#193f3a]"
-        defaultValue={value}
-        type={type}
-      />
-    </label>
   );
 }

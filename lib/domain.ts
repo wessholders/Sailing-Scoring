@@ -21,6 +21,8 @@ export type UserRole =
 
 export type InvitationStatus = 'PENDING' | 'ACCEPTED' | 'EXPIRED' | 'REVOKED';
 
+export type EventRegistrationStatus = 'INVITED' | 'NEEDS_ACCOUNT' | 'REGISTERED' | 'DECLINED';
+
 export type ScoringProfileCode = 'ICSA_FLEET';
 
 export type RaceResultStatusCode =
@@ -180,6 +182,21 @@ export type EventEntry = {
   shortName?: string;
   seed?: number;
   active: boolean;
+};
+
+export type EventRegistrationInvite = {
+  id: Id;
+  eventId: Id;
+  teamId?: Id;
+  teamName: string;
+  contactEmail: string;
+  status: EventRegistrationStatus;
+  tokenHash: string;
+  registrationUrl: string;
+  createdByUserId: Id;
+  acceptedAt?: string;
+  createdAt: string;
+  updatedAt: string;
 };
 
 export type Division = {

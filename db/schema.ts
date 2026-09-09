@@ -160,6 +160,23 @@ export const schemaStatements = [
     FOREIGN KEY (event_id) REFERENCES events(id),
     FOREIGN KEY (team_id) REFERENCES teams(id)
   )`,
+  `CREATE TABLE IF NOT EXISTS event_registration_invites (
+    id TEXT PRIMARY KEY,
+    event_id TEXT NOT NULL,
+    team_id TEXT,
+    team_name TEXT NOT NULL,
+    contact_email TEXT NOT NULL,
+    status TEXT NOT NULL CHECK (status IN ('INVITED', 'NEEDS_ACCOUNT', 'REGISTERED', 'DECLINED')),
+    token_hash TEXT NOT NULL UNIQUE,
+    registration_url TEXT NOT NULL,
+    created_by_user_id TEXT NOT NULL,
+    accepted_at TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    FOREIGN KEY (event_id) REFERENCES events(id),
+    FOREIGN KEY (team_id) REFERENCES teams(id),
+    FOREIGN KEY (created_by_user_id) REFERENCES users(id)
+  )`,
   `CREATE TABLE IF NOT EXISTS divisions (
     id TEXT PRIMARY KEY,
     event_id TEXT NOT NULL,
@@ -241,6 +258,8 @@ export const schemaStatements = [
     ON team_memberships(team_id, active)`,
   `CREATE INDEX IF NOT EXISTS idx_team_invitations_team_status
     ON team_invitations(team_id, status)`,
+  `CREATE INDEX IF NOT EXISTS idx_event_registration_invites_event_status
+    ON event_registration_invites(event_id, status)`,
   `CREATE INDEX IF NOT EXISTS idx_team_boats_team_active
     ON team_boats(team_id, active)`,
   `CREATE INDEX IF NOT EXISTS idx_sailing_assignments_entry_division
